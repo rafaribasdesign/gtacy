@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GTacy Meliponário — Abelhas Nativas ao Vivo</title>
+  <meta name="description" content="Meliponário urbano em Balneário Camboriú. Acompanhe ao vivo a vida de 4 espécies de abelhas nativas sem ferrão, 24 horas por dia." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- hls.js para reprodução de streams HLS no browser -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <style>
+    /* =============================================
+       VARIÁVEIS E RESET
+    ============================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:       #876503;
+      --gold-hover: #b98a04;
+      --cream:      #fffaee;
+      --dark:       #1a1200;
+      --text:       #2e1f00;
+      --muted:      #6b4f20;
+      --radius-lg:  20px;
+      --radius-md:  12px;
+      --shadow-gold: 0 20px 60px rgba(135,101,3,0.22);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      cursor: none;
+      overflow-x: hidden;
+    }
+
+    /* Restaurar cursor em dispositivos touch */
+    @media (hover: none) {
+      body { cursor: auto; }
+      #bee-cursor { display: none; }
+    }
+
+    /* =============================================
+       CURSOR PERSONALIZADO (bee + partículas)
+    ============================================= */
+    #bee-cursor {
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      width: 36px; height: 36px;
+      will-change: transform, left, top;
+    }
+
+    /* =============================================
+       NAVBAR
+    ============================================= */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(26, 18, 0, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(135,101,3,0.18);
+      height: 68px;
+    }
+    .nav-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo img {
+      height: 38px;
+      object-fit: contain;
+    }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 36px;
+    }
+    .nav-links a {
+      color: rgba(255,250,238,0.65);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold-hover); }
+
+    /* =============================================
+       HERO
+    ============================================= */
+    .hero {
+      min-height: 100vh;
+      background: var(--dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 110%, rgba(135,101,3,0.18) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 40% at 0% 50%,   rgba(135,101,3,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 40% at 100% 50%, rgba(135,101,3,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-hexagons {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    @keyframes hexFloat {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-45px) rotate(22deg); }
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.6rem, 6.5vw, 5.2rem);
+      font-weight: 900;
+      color: var(--cream);
+      line-height: 1.08;
+      max-width: 820px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 em {
+      color: var(--gold-hover);
+      font-style: italic;
+    }
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: rgba(255,250,238,0.55);
+      max-width: 480px;
+      line-height: 1.75;
+      margin-bottom: 52px;
+      position: relative;
+      z-index: 1;
+    }
+    .btn-cta {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--cream);
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 17px 44px;
+      border-radius: 100px;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+      letter-spacing: 0.3px;
+      transition: background 0.22s, transform 0.18s, box-shadow 0.22s;
+    }
+    .btn-cta:hover {
+      background: var(--gold-hover);
+      transform: scale(1.05);
+      box-shadow: 0 10px 36px rgba(135,101,3,0.45);
+    }
+
+    /* =============================================
+       SOBRE
+    ============================================= */
+    .section-sobre {
+      background: var(--cream);
+      padding: 108px 24px;
+    }
+    .sobre-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .sobre-tag {
+      display: inline-block;
+      background: rgba(135,101,3,0.1);
+      border: 1px solid rgba(135,101,3,0.22);
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+    }
+    .sobre-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.15;
+      margin-bottom: 22px;
+    }
+    .sobre-body p {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.82;
+      margin-bottom: 14px;
+    }
+    .sobre-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .stat-item {
+      background: var(--dark);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      border: 1px solid rgba(135,101,3,0.18);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .stat-item:hover {
+      border-color: rgba(135,101,3,0.4);
+      box-shadow: 0 8px 32px rgba(135,101,3,0.12);
+    }
+    .stat-icon {
+      width: 48px; height: 48px;
+      background: rgba(135,101,3,0.14);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon svg { width: 24px; height: 24px; }
+    .stat-number {
+      display: block;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--gold-hover);
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 0.82rem;
+      color: rgba(255,250,238,0.5);
+      margin-top: 3px;
+    }
+
+    /* =============================================
+       ESPÉCIES
+    ============================================= */
+    .section-especies {
+      background: var(--dark);
+      padding: 108px 24px;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 68px;
+    }
+    .section-tag {
+      display: inline-block;
+      background: rgba(135,101,3,0.14);
+      border: 1px solid rgba(135,101,3,0.25);
+      color: var(--gold-hover);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.12;
+      margin-bottom: 16px;
+    }
+    .section-especies .section-title { color: var(--cream); }
+    .section-desc {
+      font-size: 1rem;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+    .section-especies .section-desc { color: rgba(255,250,238,0.5); }
+
+    .especies-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+    .especie-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(135,101,3,0.12);
+      transition: transform 0.32s ease, box-shadow 0.32s ease;
+    }
+    .especie-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-gold);
+    }
+    .card-img {
+      width: 100%;
+      height: 240px;
+      overflow: hidden;
+      position: relative;
+    }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.45s ease;
+    }
+    .especie-card:hover .card-img img {
+      transform: scale(1.06);
+    }
+    .card-body {
+      padding: 28px 28px 32px;
+      border-top: 3px solid var(--gold);
+    }
+    .card-body h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .card-body em {
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-style: italic;
+      display: block;
+      margin-bottom: 18px;
+    }
+    .card-curiosidades {
+      list-style: none;
+      margin-bottom: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .card-curiosidades li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      padding-left: 18px;
+      position: relative;
+      line-height: 1.55;
+    }
+    .card-curiosidades li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-size: 0.75rem;
+      top: 2px;
+    }
+    .btn-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--gold);
+      color: var(--cream);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 12px 24px;
+      border-radius: 100px;
+      border: none;
+      cursor: none;
+      letter-spacing: 0.2px;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-live:hover {
+      background: var(--gold-hover);
+      box-shadow: 0 6px 28px rgba(135,101,3,0.38);
+    }
+    .pulse-dot {
+      width: 10px; height: 10px;
+      background: #e53935;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .pulse-dot::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 2px solid #e53935;
+      border-radius: 50%;
+      animation: pulseRing 1.5s ease-out infinite;
+    }
+    @keyframes pulseRing {
+      0%   { transform: scale(0.75); opacity: 1; }
+      100% { transform: scale(2.1);  opacity: 0; }
+    }
+
+    /* =============================================
+       TIMELINE — POR QUE AS ABELHAS IMPORTAM
+    ============================================= */
+    .section-timeline {
+      background: var(--cream);
+      padding: 108px 24px;
+    }
+    .section-timeline .section-title { color: var(--text); }
+    .section-timeline .section-desc { color: var(--muted); }
+
+    .timeline {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 26px;
+      padding-bottom: 44px;
+      position: relative;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: 27px;
+      top: 56px;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(135,101,3,0.28), rgba(135,101,3,0.04));
+    }
+    .timeline-item:last-child::after { display: none; }
+    .timeline-icon {
+      width: 56px; height: 56px;
+      background: var(--dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 2px solid rgba(135,101,3,0.28);
+    }
+    .timeline-icon svg { width: 26px; height: 26px; }
+    .timeline-content { padding-top: 10px; }
+    .timeline-content h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .timeline-content p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    /* =============================================
+       FOOTER
+    ============================================= */
+    footer {
+      background: var(--dark);
+      padding: 64px 24px 32px;
+      border-top: 1px solid rgba(135,101,3,0.14);
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid rgba(255,250,238,0.06);
+    }
+    .footer-logo img {
+      max-width: 160px;
+      height: auto;
+      object-fit: contain;
+    }
+    .footer-location {
+      font-size: 0.88rem;
+      color: rgba(255,250,238,0.4);
+      letter-spacing: 0.5px;
+    }
+    .footer-phrase {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: rgba(255,250,238,0.32);
+      max-width: 420px;
+      line-height: 1.65;
+    }
+    .footer-socials {
+      display: flex;
+      gap: 14px;
+      margin-top: 4px;
+    }
+    .footer-socials a {
+      width: 44px; height: 44px;
+      background: rgba(135,101,3,0.12);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(135,101,3,0.2);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .footer-socials a:hover {
+      background: rgba(135,101,3,0.28);
+      border-color: rgba(135,101,3,0.4);
+    }
+    .footer-socials svg { width: 20px; height: 20px; fill: rgba(255,250,238,0.75); }
+    .footer-copy {
+      max-width: 1100px;
+      margin: 24px auto 0;
+      text-align: center;
+      font-size: 0.78rem;
+      color: rgba(255,250,238,0.2);
+    }
+
+    /* =============================================
+       MODAL DE STREAM
+    ============================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-box {
+      background: var(--dark);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      width: 100%;
+      max-width: 820px;
+      border: 1px solid rgba(135,101,3,0.22);
+      position: relative;
+      transform: scale(0.94);
+      transition: transform 0.28s ease;
+    }
+    .modal-overlay.open .modal-box { transform: scale(1); }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 18px;
+      background: rgba(135,101,3,0.14);
+      border: none;
+      color: rgba(255,250,238,0.8);
+      font-size: 1rem;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(135,101,3,0.32); }
+    #modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 20px;
+      padding-right: 44px;
+    }
+    #modal-video {
+      width: 100%;
+      border-radius: var(--radius-md);
+      background: #000;
+      max-height: 460px;
+      display: none;
+    }
+    #modal-error {
+      color: rgba(255,250,238,0.55);
+      text-align: center;
+      padding: 40px 20px 28px;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .stream-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+      gap: 16px;
+    }
+    .loading-spinner {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(135,101,3,0.18);
+      border-top-color: #876503;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      color: rgba(255,250,238,0.45);
+      font-size: 0.88rem;
+    }
+    .btn-retry {
+      background: none;
+      border: 1px solid rgba(135,101,3,0.35);
+      color: var(--gold-hover);
+      padding: 9px 22px;
+      border-radius: 100px;
+      cursor: none;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      margin-top: 10px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-retry:hover {
+      background: rgba(135,101,3,0.14);
+      border-color: rgba(135,101,3,0.55);
+    }
+
+    /* =============================================
+       ANIMAÇÕES DE ENTRADA (IntersectionObserver)
+    ============================================= */
+    .animate {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .animate.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .delay-1 { transition-delay: 0.1s; }
+    .delay-2 { transition-delay: 0.2s; }
+    .delay-3 { transition-delay: 0.3s; }
+    .delay-4 { transition-delay: 0.4s; }
+
+    /* =============================================
+       RESPONSIVO
+    ============================================= */
+    @media (max-width: 900px) {
+      .sobre-grid { grid-template-columns: 1fr; gap: 48px; }
+      .especies-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hero h1 { font-size: 2.2rem; }
+      .modal-box { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ CURSOR BEE ============ -->
+  <!-- Inserido via JS abaixo -->
+
+  <!-- ============ NAVBAR ============ -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <img src="logo-claro.png" alt="GTacy Meliponário" />
+      </div>
+      <ul class="nav-links">
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#especies">Nossas Abelhas</a></li>
+        <li><a href="#importancia">Por que importam</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="inicio">
+    <div class="hero-hexagons" aria-hidden="true"></div>
+
+    <h1>
+      Onde a natureza pulsa<br />
+      <em>em cada favo</em>
+    </h1>
+    <p class="hero-subtitle">
+      Um meliponário urbano em Balneário Camboriú — SC.<br />
+      Abelhas nativas, câmeras ao vivo, vidas em flor.
+    </p>
+    <a href="#especies" class="btn-cta">Conheça as colmeias</a>
+  </section>
+
+  <!-- ============ SOBRE ============ -->
+  <section class="section-sobre" id="sobre">
+    <div class="sobre-grid">
+      <div class="sobre-body">
+        <span class="sobre-tag animate">Quem somos</span>
+        <h2 class="sobre-title animate delay-1">Abelhas no coração<br />da cidade</h2>
+        <p class="animate delay-2">
+          O GTacy Meliponário nasceu dentro de um apartamento em Balneário Camboriú — SC.
+          O que começou como uma curiosidade virou missão: criar, proteger e apresentar ao mundo
+          as abelhas nativas sem ferrão do Brasil.
+        </p>
+        <p class="animate delay-3">
+          Aqui, as colmeias convivem com a vida cotidiana. E para quem está longe,
+          câmeras IP transmitem ao vivo a rotina de cada colmeia — 24 horas por dia,
+          sete dias por semana. Você acompanha de onde estiver, em tempo real.
+        </p>
+      </div>
+
+      <div class="sobre-stats">
+        <div class="stat-item animate delay-1">
+          <div class="stat-icon">
+            <!-- Ícone: 4 espécies -->
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="12" cy="15" rx="5" ry="7" fill="#876503"/>
+              <ellipse cx="7.5" cy="11" rx="6" ry="3.5" fill="rgba(255,250,238,0.2)" transform="rotate(-25 7.5 11)"/>
+              <ellipse cx="16.5" cy="11" rx="6" ry="3.5" fill="rgba(255,250,238,0.2)" transform="rotate(25 16.5 11)"/>
+              <circle cx="12" cy="7" r="3.5" fill="#b98a04"/>
+              <line x1="10.5" y1="4.5" x2="8" y2="2" stroke="#b98a04" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="13.5" y1="4.5" x2="16" y2="2" stroke="#b98a04" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <span class="stat-number">4 espécies</span>
+            <span class="stat-label">de abelhas nativas abrigadas</span>
+          </div>
+        </div>
+
+        <div class="stat-item animate delay-2">
+          <div class="stat-icon">
+            <!-- Ícone: colmeia / favo -->
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="12,2 17,5 17,11 12,14 7,11 7,5" fill="none" stroke="#876503" stroke-width="1.8"/>
+              <polygon points="12,10 17,13 17,19 12,22 7,19 7,13" fill="none" stroke="#876503" stroke-width="1.8"/>
+              <polygon points="19,6 24,9 24,15 19,18 14,15 14,9" fill="none" stroke="#876503" stroke-width="1.8"/>
+              <polygon points="5,6 10,9 10,15 5,18 0,15 0,9" fill="none" stroke="#876503" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <div>
+            <span class="stat-number">9.000+ abelhas</span>
+            <span class="stat-label">só da Jataí no GTacy</span>
+          </div>
+        </div>
+
+        <div class="stat-item animate delay-3">
+          <div class="stat-icon">
+            <!-- Ícone: câmera -->
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="7" width="16" height="12" rx="2.5" stroke="#876503" stroke-width="1.8"/>
+              <polygon points="18,10 23,7 23,17 18,14" fill="#876503"/>
+              <circle cx="10" cy="13" r="2.5" fill="#876503" opacity="0.7"/>
+            </svg>
+          </div>
+          <div>
+            <span class="stat-number">Ao vivo 24h</span>
+            <span class="stat-label">monitoramento por câmeras IP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ESPÉCIES ============ -->
+  <section class="section-especies" id="especies">
+    <div class="section-header">
+      <span class="section-tag animate">Biodiversidade</span>
+      <h2 class="section-title animate delay-1">Nossas Abelhas</h2>
+      <p class="section-desc animate delay-2">
+        Quatro espécies nativas sem ferrão, cada uma com seu mel,
+        seu jeito de viver e sua colmeia transmitida ao vivo.
+      </p>
+    </div>
+
+    <div class="especies-grid">
+
+      <!-- Card 1: Jataí -->
+      <div class="especie-card animate delay-1">
+        <div class="card-img">
+          <img src="jatai.jpg" alt="Jataí — Tetragonisca angustula" loading="lazy" />
+        </div>
+        <div class="card-body">
+          <h3>Jataí</h3>
+          <em>Tetragonisca angustula</em>
+          <ul class="card-curiosidades">
+            <li>Uma das menores abelhas nativas do Brasil</li>
+            <li>Mais de 9.000 indivíduos só aqui no GTacy</li>
+            <li>Mel com propriedades medicinais reconhecidas</li>
+            <li>Entrada da colmeia em formato de tubinho de cerume</li>
+          </ul>
+          <button class="btn-live" onclick="openStream('jatai', 'Jataí')">
+            <span class="pulse-dot"></span> Veja a colmeia ao vivo
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 2: Mandaçaia -->
+      <div class="especie-card animate delay-2">
+        <div class="card-img">
+          <img src="mandacaia.webp" alt="Mandaçaia — Melipona quadrifasciata" loading="lazy" />
+        </div>
+        <div class="card-body">
+          <h3>Mandaçaia</h3>
+          <em>Melipona quadrifasciata</em>
+          <ul class="card-curiosidades">
+            <li>Abelha de médio porte, listras amarelas no abdômen</li>
+            <li>Mel escasso e muito valorizado no Brasil</li>
+            <li>Colônias menores, comportamento dócil e curioso</li>
+            <li>Importante polinizadora de frutas nativas</li>
+          </ul>
+          <button class="btn-live" onclick="openStream('mandacaia', 'Mandaçaia')">
+            <span class="pulse-dot"></span> Veja a colmeia ao vivo
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 3: Mandaguari -->
+      <div class="especie-card animate delay-3">
+        <div class="card-img">
+          <img src="mandaguari.webp" alt="Mandaguari — Scaptotrigona postica" loading="lazy" />
+        </div>
+        <div class="card-body">
+          <h3>Mandaguari</h3>
+          <em>Scaptotrigona postica</em>
+          <ul class="card-curiosidades">
+            <li>Territorial e ativa — defende seu espaço com força</li>
+            <li>Produz própolis de altíssima qualidade</li>
+            <li>Entrada da colmeia com aspecto rugoso e resinoso</li>
+            <li>Mel intenso, escuro e encorpado</li>
+          </ul>
+          <button class="btn-live" onclick="openStream('mandaguari', 'Mandaguari')">
+            <span class="pulse-dot"></span> Veja a colmeia ao vivo
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 4: Mirim Guaçu -->
+      <div class="especie-card animate delay-4">
+        <div class="card-img">
+          <img src="mirim-guacu.jpg" alt="Mirim Guaçu — Plebeia julianii" loading="lazy" />
+        </div>
+        <div class="card-body">
+          <h3>Mirim Guaçu</h3>
+          <em>Plebeia julianii</em>
+          <ul class="card-curiosidades">
+            <li>Uma das menores abelhas nativas conhecidas</li>
+            <li>Mel extremamente raro e de sabor delicado</li>
+            <li>Colônias pequenas e de comportamento delicado</li>
+            <li>Polinizadora de plantas de pequenas flores</li>
+          </ul>
+          <button class="btn-live" onclick="openStream('mirimguacu', 'Mirim Guaçu')">
+            <span class="pulse-dot"></span> Veja a colmeia ao vivo
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ TIMELINE ============ -->
+  <section class="section-timeline" id="importancia">
+    <div class="section-header">
+      <span class="section-tag animate" style="background:rgba(135,101,3,0.1);border-color:rgba(135,101,3,0.22);color:var(--gold);">Propósito</span>
+      <h2 class="section-title animate delay-1">Por que as abelhas<br />nativas importam</h2>
+      <p class="section-desc animate delay-2">
+        Muito além do mel — elas sustentam a vida como a conhecemos.
+      </p>
+    </div>
+
+    <div class="timeline">
+
+      <div class="timeline-item animate delay-1">
+        <div class="timeline-icon">
+          <!-- Ícone: flor / polinização -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3" fill="#876503"/>
+            <ellipse cx="12" cy="5" rx="2.5" ry="4" fill="#b98a04" opacity="0.8"/>
+            <ellipse cx="12" cy="19" rx="2.5" ry="4" fill="#b98a04" opacity="0.8"/>
+            <ellipse cx="5" cy="12" rx="4" ry="2.5" fill="#b98a04" opacity="0.8"/>
+            <ellipse cx="19" cy="12" rx="4" ry="2.5" fill="#b98a04" opacity="0.8"/>
+            <ellipse cx="7.3" cy="7.3" rx="2.5" ry="4" fill="#b98a04" opacity="0.5" transform="rotate(45 7.3 7.3)"/>
+            <ellipse cx="16.7" cy="16.7" rx="2.5" ry="4" fill="#b98a04" opacity="0.5" transform="rotate(45 16.7 16.7)"/>
+            <ellipse cx="16.7" cy="7.3" rx="2.5" ry="4" fill="#b98a04" opacity="0.5" transform="rotate(-45 16.7 7.3)"/>
+            <ellipse cx="7.3" cy="16.7" rx="2.5" ry="4" fill="#b98a04" opacity="0.5" transform="rotate(-45 7.3 16.7)"/>
+          </svg>
+        </div>
+        <div class="timeline-content">
+          <h4>Polinização que alimenta o mundo</h4>
+          <p>Abelhas nativas são as maiores polinadoras da flora brasileira. Sem elas, boa parte das frutas, sementes e flores que conhecemos deixaria de existir — e junto, toda a cadeia de vida que depende delas.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item animate delay-2">
+        <div class="timeline-icon">
+          <!-- Ícone: folha / biodiversidade -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21C12 21 4 16 4 9C4 5.686 7.134 3 12 3C16.866 3 20 5.686 20 9C20 16 12 21 12 21Z" fill="#876503" opacity="0.8"/>
+            <line x1="12" y1="21" x2="12" y2="10" stroke="#fffaee" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12" y1="14" x2="8.5" y2="11" stroke="#fffaee" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12" y1="17" x2="15.5" y2="14" stroke="#fffaee" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="timeline-content">
+          <h4>Guardiãs da biodiversidade</h4>
+          <p>Cada espécie de abelha nativa é adaptada a um grupo específico de plantas. Proteger essas abelhas é proteger a diversidade de toda uma floresta — e do ecossistema que sustenta água, solo e clima.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item animate delay-3">
+        <div class="timeline-icon">
+          <!-- Ícone: gota / mel medicinal -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3C12 3 6 10 6 15C6 18.314 8.686 21 12 21C15.314 21 18 18.314 18 15C18 10 12 3 12 3Z" fill="#876503"/>
+            <path d="M9 16C9.5 17.5 11 18.5 12.5 18" stroke="#fffaee" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="timeline-content">
+          <h4>Mel com poder medicinal</h4>
+          <p>O mel das abelhas nativas sem ferrão possui composição única — rico em antioxidantes, enzimas e compostos antimicrobianos que a ciência vem cada vez mais estudando e confirmando.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item animate delay-4">
+        <div class="timeline-icon">
+          <!-- Ícone: globo / ecossistema -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9" stroke="#876503" stroke-width="1.8"/>
+            <ellipse cx="12" cy="12" rx="4" ry="9" stroke="#876503" stroke-width="1.4"/>
+            <line x1="3" y1="12" x2="21" y2="12" stroke="#876503" stroke-width="1.4"/>
+            <line x1="5" y1="7" x2="19" y2="7" stroke="#876503" stroke-width="1"/>
+            <line x1="5" y1="17" x2="19" y2="17" stroke="#876503" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="timeline-content">
+          <h4>Sentinelas do equilíbrio</h4>
+          <p>Quando as abelhas prosperam, o ecossistema ao redor também está saudável. Elas são indicadoras naturais da qualidade do ambiente — do ar, da água e da vegetação que nos rodeia.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <img src="logo-claro.png" alt="GTacy Meliponário" />
+      </div>
+      <p class="footer-location">Balneário Camboriú — SC, Brasil</p>
+      <p class="footer-phrase">
+        "Nas frestas do concreto, a natureza encontra seu caminho —<br />
+        e nós escolhemos ser parte disso."
+      </p>
+      <div class="footer-socials">
+        <!-- Instagram -->
+        <a href="#" aria-label="Instagram do GTacy Meliponário">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+        </a>
+        <!-- WhatsApp -->
+        <a href="#" aria-label="WhatsApp do GTacy Meliponário">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+    <p class="footer-copy">© 2025 GTacy Meliponário. Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- ============ MODAL DE STREAM ============ -->
+  <div id="modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()" aria-label="Fechar transmissão">✕</button>
+      <h3 id="modal-title"></h3>
+      <div id="modal-loading" class="stream-loading">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Conectando à transmissão...</p>
+      </div>
+      <video id="modal-video" controls autoplay muted playsinline></video>
+      <p id="modal-error" hidden>
+        A transmissão está temporariamente indisponível. Tente novamente em instantes.
+        <br/>
+        <button class="btn-retry" onclick="retryStream()">↺ Tentar novamente</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- ============ SCRIPT ============ -->
+  <script>
+    /* ==============================================
+       STREAMS HLS
+       ⚠️ Substitua pelos caminhos HLS reais após
+          configurar o MediaMTX no servidor.
+       MediaMTX converte RTSP → HLS localmente.
+       RTSPs originais (referência):
+         Jataí:       rtsp://davila.zapto.org:9000/ch0_0.h264
+         Mandaçaia:   rtsp://davila.zapto.org:9002/ch0_0.h264
+         Mandaguari:  rtsp://davila.zapto.org:9003/ch0_0.h264
+         Mirim Guaçu: rtsp://davila.zapto.org:9004/ch0_0.h264
+    =============================================== */
+    const STREAMS = {
+      jatai:      'http://davila.zapto.org:8888/jatai/index.m3u8',
+      mandacaia:  'http://davila.zapto.org:8888/mandacaia/index.m3u8',
+      mandaguari: 'http://davila.zapto.org:8888/mandaguari/index.m3u8',
+      mirimguacu: 'http://davila.zapto.org:8888/mirimguacu/index.m3u8'
+    };
+
+    /* ==============================================
+       CURSOR PERSONALIZADO — ABELHA + PARTÍCULAS
+    =============================================== */
+    (function initCursor() {
+      const bee = document.createElement('div');
+      bee.id = 'bee-cursor';
+      bee.setAttribute('aria-hidden', 'true');
+      bee.innerHTML = `<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+        <!-- Antenas -->
+        <line x1="15" y1="7.5" x2="10.5" y2="2.5" stroke="#876503" stroke-width="1.6" stroke-linecap="round"/>
+        <line x1="21" y1="7.5" x2="25.5" y2="2.5" stroke="#876503" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="10.5" cy="2.5" r="2" fill="#b98a04"/>
+        <circle cx="25.5" cy="2.5" r="2" fill="#b98a04"/>
+        <!-- Asas -->
+        <ellipse cx="8.5" cy="16" rx="8.5" ry="4.5" fill="rgba(180,210,255,0.52)" transform="rotate(-22 8.5 16)"/>
+        <ellipse cx="27.5" cy="16" rx="8.5" ry="4.5" fill="rgba(180,210,255,0.52)" transform="rotate(22 27.5 16)"/>
+        <!-- Cabeça -->
+        <circle cx="18" cy="10.5" r="5" fill="#b98a04"/>
+        <circle cx="15.8" cy="9.5" r="1.3" fill="#1a1200"/>
+        <circle cx="20.2" cy="9.5" r="1.3" fill="#1a1200"/>
+        <!-- Corpo -->
+        <ellipse cx="18" cy="23" rx="6.5" ry="9" fill="#876503"/>
+        <!-- Listras -->
+        <rect x="11.5" y="20" width="13" height="3.2" rx="1.6" fill="#1a1200" opacity="0.6"/>
+        <rect x="11.5" y="25.2" width="13" height="3.2" rx="1.6" fill="#1a1200" opacity="0.6"/>
+        <!-- Ferrão (fake — sem ferrão, mas estético) -->
+        <polygon points="18,33 15.5,30 20.5,30" fill="#2e1f00"/>
+      </svg>`;
+      document.body.appendChild(bee);
+
+      let lx = window.innerWidth / 2;
+      let ly = window.innerHeight / 2;
+      let targetAngle = 0;
+      let currentAngle = 0;
+      let frameId;
+      let lastParticleTime = 0;
+
+      document.addEventListener('mousemove', e => {
+        const dx = e.clientX - lx;
+        const dy = e.clientY - ly;
+        bee.style.left = e.clientX + 'px';
+        bee.style.top  = e.clientY + 'px';
+
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 2) {
+          // +90 porque o SVG aponta para cima (0°), queremos que 0° = direita
+          targetAngle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+          const now = Date.now();
+          if (now - lastParticleTime > 40) {
+            spawnParticle(lx + dx * 0.3, ly + dy * 0.3);
+            lastParticleTime = now;
+          }
+        }
+        lx = e.clientX;
+        ly = e.clientY;
+      });
+
+      function rotateBee() {
+        let diff = targetAngle - currentAngle;
+        while (diff >  180) diff -= 360;
+        while (diff < -180) diff += 360;
+        currentAngle += diff * 0.14;
+        bee.style.transform = `translate(-50%,-50%) rotate(${currentAngle}deg)`;
+        frameId = requestAnimationFrame(rotateBee);
+      }
+      rotateBee();
+
+      function spawnParticle(x, y) {
+        const p = document.createElement('div');
+        const size = 4 + Math.random() * 2.5;
+        p.style.cssText = [
+          'position:fixed',
+          `left:${x}px`,
+          `top:${y}px`,
+          `width:${size}px`,
+          `height:${size}px`,
+          'background:#876503',
+          'border-radius:50%',
+          'pointer-events:none',
+          'z-index:9998',
+          'transform:translate(-50%,-50%)',
+          'opacity:0.72',
+          'transition:opacity 0.65s ease, transform 0.65s ease'
+        ].join(';');
+        document.body.appendChild(p);
+        // Força reflow antes de iniciar a transição
+        void p.offsetWidth;
+        p.style.opacity = '0';
+        p.style.transform = 'translate(-50%,-50%) scale(0.1)';
+        setTimeout(() => p.remove(), 700);
+      }
+    })();
+
+    /* ==============================================
+       HEXÁGONOS FLUTUANTES NO HERO
+    =============================================== */
+    (function initHexagons() {
+      const container = document.querySelector('.hero-hexagons');
+      const NS = 'http://www.w3.org/2000/svg';
+      for (let i = 0; i < 16; i++) {
+        const size   = 38 + Math.random() * 78;
+        const svg    = document.createElementNS(NS, 'svg');
+        const poly   = document.createElementNS(NS, 'polygon');
+        svg.setAttribute('width',   size);
+        svg.setAttribute('height',  size * 1.155);
+        svg.setAttribute('viewBox', '0 0 100 115');
+        poly.setAttribute('points', '50,4 97,27.5 97,87.5 50,111 3,87.5 3,27.5');
+        poly.setAttribute('fill',   'none');
+        poly.setAttribute('stroke', '#876503');
+        poly.setAttribute('stroke-width', '2');
+        svg.appendChild(poly);
+        const dur = (10 + Math.random() * 16).toFixed(1);
+        const del = -(Math.random() * 16).toFixed(1);
+        svg.style.cssText = [
+          'position:absolute',
+          `left:${(Math.random() * 105 - 5).toFixed(1)}%`,
+          `top:${(Math.random() * 105 - 5).toFixed(1)}%`,
+          `opacity:${(0.04 + Math.random() * 0.09).toFixed(2)}`,
+          `animation:hexFloat ${dur}s ease-in-out ${del}s infinite alternate`
+        ].join(';');
+        container.appendChild(svg);
+      }
+    })();
+
+    /* ==============================================
+       ANIMAÇÕES DE ENTRADA — IntersectionObserver
+    =============================================== */
+    (function initAnimations() {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.animate').forEach(el => obs.observe(el));
+    })();
+
+    /* ==============================================
+       MODAL + STREAM HLS
+       - Timeout: 20s (HLS precisa de 3 segmentos antes de iniciar)
+       - Fallback nativo para Safari
+       - Retry sem fechar o modal
+    =============================================== */
+    let hlsInstance    = null;
+    let streamTimeout  = null;
+    let activeKey      = null;
+    let activeLabel    = null;
+
+    function showLoading() {
+      document.getElementById('modal-loading').style.display = 'flex';
+      document.getElementById('modal-video').style.display  = 'none';
+      document.getElementById('modal-error').hidden          = true;
+    }
+
+    function showVideo() {
+      document.getElementById('modal-loading').style.display = 'none';
+      document.getElementById('modal-video').style.display  = 'block';
+      document.getElementById('modal-error').hidden          = true;
+    }
+
+    function showError() {
+      document.getElementById('modal-loading').style.display = 'none';
+      document.getElementById('modal-video').style.display  = 'none';
+      document.getElementById('modal-error').hidden          = false;
+    }
+
+    function destroyHls() {
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      clearTimeout(streamTimeout);
+    }
+
+    function loadHls(url) {
+      const video = document.getElementById('modal-video');
+
+      // Safari — HLS nativo
+      if (!Hls.isSupported() && video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function onMeta() {
+          clearTimeout(streamTimeout);
+          showVideo();
+          video.play().catch(() => {});
+          video.removeEventListener('loadedmetadata', onMeta);
+        });
+        video.addEventListener('error', function onErr() {
+          clearTimeout(streamTimeout);
+          showError();
+          video.removeEventListener('error', onErr);
+        });
+        return;
+      }
+
+      if (!Hls.isSupported()) { showError(); return; }
+
+      hlsInstance = new Hls({
+        enableWorker:        true,
+        lowLatencyMode:      false,
+        backBufferLength:    90,
+        maxLoadingDelay:     8,
+        liveSyncDurationCount: 3,
+        // Permite CORS com credenciais omitidas (necessário se o servidor enviar Allow-Origin: *)
+        xhrSetup: function(xhr) { xhr.withCredentials = false; }
+      });
+
+      hlsInstance.loadSource(url);
+      hlsInstance.attachMedia(video);
+
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+        clearTimeout(streamTimeout);
+        showVideo();
+        video.play().catch(() => {});
+      });
+
+      hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+        if (data.fatal) {
+          clearTimeout(streamTimeout);
+          destroyHls();
+          showError();
+        }
+      });
+    }
+
+    function openStream(streamKey, label) {
+      activeKey   = streamKey;
+      activeLabel = label;
+
+      const modal = document.getElementById('modal');
+      const video = document.getElementById('modal-video');
+
+      destroyHls();
+      video.pause();
+      video.src = '';
+      document.getElementById('modal-title').textContent = label + ' — Ao Vivo';
+      showLoading();
+
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      // 20 segundos: HLS precisa de múltiplos segmentos antes de iniciar
+      streamTimeout = setTimeout(showError, 20000);
+
+      loadHls(STREAMS[streamKey]);
+    }
+
+    function retryStream() {
+      if (!activeKey) return;
+      const video = document.getElementById('modal-video');
+      destroyHls();
+      video.pause();
+      video.src = '';
+      showLoading();
+      streamTimeout = setTimeout(showError, 20000);
+      loadHls(STREAMS[activeKey]);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      const video = document.getElementById('modal-video');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      destroyHls();
+      video.pause();
+      video.src = '';
+      activeKey = activeLabel = null;
+    }
+
+    // Fechar modal clicando no overlay
+    document.getElementById('modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Fechar com ESC
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
